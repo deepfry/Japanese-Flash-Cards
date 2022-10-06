@@ -41,10 +41,10 @@ var hiragana = [
 	{en:'ke', jp:'け'},
 	{en:'ko', jp:'こ'},
 	{en: 'a', jp:'あ'},
-	{en: 'a', jp:'い'},
-	{en: 'a', jp:'う'},
-	{en: 'a', jp:'え'},
-	{en: 'a', jp:'お'}
+	{en: 'i', jp:'い'},
+	{en: 'u', jp:'う'},
+	{en: 'e', jp:'え'},
+	{en: 'o', jp:'お'}
 ]
 var hiraganaDakuten = [
 	{en:'ba',  jp:'ば'},
@@ -116,10 +116,10 @@ var katakana = [
 	{en:'ke', jp:'ケ'},
 	{en:'ko', jp:'コ'},
 	{en: 'a', jp:'ア'},
-	{en: 'a', jp:'イ'},
-	{en: 'a', jp:'ウ'},
-	{en: 'a', jp:'エ'},
-	{en: 'a', jp:'オ'}
+	{en: 'i', jp:'イ'},
+	{en: 'u', jp:'ウ'},
+	{en: 'e', jp:'エ'},
+	{en: 'o', jp:'オ'}
 ]
 var katakanaDakuten = [
 	{en:'ba',  jp:'バ'},
@@ -179,16 +179,63 @@ var difficulties = {
 
 var prevQuestions = [];
 var questions = [];
+
 var Game = {
 	start : function(){
 		$('.onStart-hide').fadeOut();
 		$('.onStart-show').fadeIn();
 		questions = getCharSets(difficulties[parseInt($('.difficulty').attr('data-diff'))].charSets);
-		let charIndex = getNum(0,questions.length-1);
-		$('.character').html(questions[charIndex].jp);
+		Game.nextQuestion();
 	},
 	populateOptions : function(ra){
-		
+		if (prevQuestions.length < questions.length) {
+			$('.options-container ul').html('');
+			function makeOption(t){
+				return $('.options-container ul').append(`<li>${t}</li>`);
+			}
+			function getRando(){
+				return questions[getNum(0,questions.length-1)].en
+			}
+			let usedOptions = [ra.en]
+			let raIndex = getNum(1,4);
+			let i = 4;
+			while(i != 0){
+				let rando = getRando()
+				if(i === raIndex){
+					makeOption(ra.en)
+					i--
+				}
+				else if (!usedOptions.includes(rando)){
+					usedOptions.push(rando);
+					makeOption(rando);
+					i--
+				}
+			}
+		}
+		else {
+			console.log('Win');
+		}
+	},
+	nextQuestion : function(){
+		let charIndex = getNum(0,questions.length-1);
+		while(prevQuestions.includes(questions[charIndex].jp)){
+			charIndex = getNum(0,questions.length-1);
+		}
+		prevQuestions.push(questions[charIndex].jp)
+		$('.character').html(questions[charIndex].jp);
+		Game.populateOptions(questions[charIndex]);
+	},
+	checkAnswer : function(a){
+		let rightAnswer = questions.find(e => e.jp === $('.character').html());
+		let userAnswer = questions.find(e => e.en === a);
+		console.log(rightAnswer)
+		console.log(`right: ${rightAnswer.en}, your answer: ${userAnswer.en}`)
+		if(userAnswer.jp === rightAnswer.jp){
+			Game.nextQuestion();
+		}
+		else {
+			console.log('no');
+		}
 	}
 }
 
@@ -214,4 +261,7 @@ $(document).on('click','.difficulty',function(){
 })
 $(document).on('click','.startGame',function(){
 	Game.start();
+})
+$(document).on('click','.options-container ul li',function(){
+	Game.checkAnswer($(this).html());
 })
